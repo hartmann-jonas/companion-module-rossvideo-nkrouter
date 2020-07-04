@@ -1,0 +1,19 @@
+{
+  "name": "rossvideo-nkrouter",
+  "version": "1.0.0",
+  "manufacturer": "Ross Video",
+  "product": "Ross NK Router",
+  "shortname": "NK Router",
+  "description": "Companion Module for controlling Ross NK series video routers connected via NK-NET adapters",
+  "keywords": [
+	  "Protocol",
+	  "Video Router",
+	  "Software"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Todd Murphy <todd@kingdomprod.com>",
+  "license": "MIT"
+}
