@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"manufacturer": "Ross Video",
 	"product": "NK Router",
-	"shortname": "NK Router",
+	"shortname": "nk-router",
 	"description": "Companion Module for controlling Ross NK series video routers connected via NK-NET adapters",
 	"keywords": [
 		"Protocol",
