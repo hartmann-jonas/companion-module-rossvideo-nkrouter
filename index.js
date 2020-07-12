@@ -66,6 +66,8 @@ instance.prototype.updateConfig = function (config) {
 
 	self.updateOptions();
 
+	self.actions();
+
 	if(reinit){
 		self.init_tcp();
 	}
@@ -80,6 +82,8 @@ instance.prototype.init = function () {
 	self.status(self.STATE_UNKNOWN);
 
 	self.init_tcp();
+
+	self.updateOptions();
 
 	self.actions();
 };
@@ -101,12 +105,18 @@ instance.prototype.init_tcp = function () {
 		self.socket = new tcp(self.config.host, self.config.port);
 
 		self.socket.on('status_change', function (status, message) {
+			if((self.currentStatus == 0) && (status == 2)){
+				//disconnected from a connected state
+				self.stopKeepAliveTimer(); //Disconnected so stop the timer
+				self.log('debug', "Disconnected");
+			}
 			self.status(status, message);
 		});
 
 		self.socket.on('error', function (err) {
-			self.status(self.STATE_ERROR, err);
-			self.log('error', "Network error: " + err.message);
+			//This gets spammy so it is removed currently
+			//self.status(self.STATE_ERROR, err);
+			//self.log('error', "Network error: " + err.message);
 		});
 
 		self.socket.on('connect', function () {
@@ -241,8 +251,6 @@ instance.prototype.destroy = function () {
 
 instance.prototype.actions = function(system) {
 	var self = this;
-
-	self.updateOptions();
 
 	self.setActions({
 		'routerXPT':{
