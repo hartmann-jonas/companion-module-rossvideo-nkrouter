@@ -48,11 +48,17 @@ instance.prototype.changeXPT = function (address, output, input, level){
 
 	if(output < self.config.outputs){
 		if(input < self.config.inputs){
-			let string = "4e4b3200"+self.decimalToHex(address,2)+"0409"+self.decimalToHex(output,4)+self.decimalToHex(input,4)+self.decimalToHex(level,8)+"00";
-			let crc = self.crc16(Buffer(string, 'hex')).toString(16);
-			string = "504153320012"+string+crc;
+			console.log(level)
+			if((level <= 255) && (level != 0)){
+				let string = "4e4b3200"+self.decimalToHex(address,2)+"0409"+self.decimalToHex(output,4)+self.decimalToHex(input,4)+self.decimalToHex(level,8)+"00";
+				let crc = self.crc16(Buffer(string, 'hex')).toString(16);
+				string = "504153320012"+string+crc;
 
-			self.transmitCommand(Buffer(string, 'hex'));
+				self.transmitCommand(Buffer(string, 'hex'));
+			}
+			else{
+				self.log('error', "Selected level out of bounds")
+			}
 		}
 		else{
 			self.log('error', "Selected input out of bounds")
@@ -268,11 +274,12 @@ instance.prototype.actions = function(system) {
 			label: 'Router Crosspoint',
 			options: [
 				{
-					type: 'dropdown',
+					type: 'multiselect',
 					label: 'Level',
 					id: 'level',
 					default: "1",
-					choices: self.CHOICES_LEVELS
+					choices: self.CHOICES_LEVELS,
+					minSelection: 1
 				},
 				{
 					type: 'dropdown',
@@ -301,7 +308,11 @@ instance.prototype.action = function(action) {
 
 	switch (id){
 		case 'routerXPT':
-			self.changeXPT(self.config.router_address, opt.output-1, opt.input-1, opt.level);
+			var level = 0;
+			for(let val of opt.level) {
+				level += Number(val);
+			}
+			self.changeXPT(self.config.router_address, opt.output-1, opt.input-1, level);
 			break;
 	}
 };
