@@ -46,11 +46,21 @@ instance.prototype.crc16 = function (buffer) {
 instance.prototype.changeXPT = function (address, output, input, level){
 	var self = this;
 
-	let string = "4e4b3200"+self.decimalToHex(address,2)+"0409"+self.decimalToHex(output,4)+self.decimalToHex(input,4)+self.decimalToHex(level,8)+"00";
-	let crc = self.crc16(Buffer(string, 'hex')).toString(16);
-	string = "504153320012"+string+crc;
+	if(output < self.config.outputs){
+		if(input < self.config.inputs){
+			let string = "4e4b3200"+self.decimalToHex(address,2)+"0409"+self.decimalToHex(output,4)+self.decimalToHex(input,4)+self.decimalToHex(level,8)+"00";
+			let crc = self.crc16(Buffer(string, 'hex')).toString(16);
+			string = "504153320012"+string+crc;
 
-	self.transmitCommand(Buffer(string, 'hex'));
+			self.transmitCommand(Buffer(string, 'hex'));
+		}
+		else{
+			self.log('error', "Selected input out of bounds")
+		}
+	}
+	else{
+		self.log('error', "Selected output out of bounds")
+	}
 };
 
 instance.prototype.updateConfig = function (config) {
@@ -201,7 +211,8 @@ instance.prototype.config_fields = function () {
 			id: 'host',
 			label: 'IP of NK-Net adapter',
 			width: 12,
-			regex: self.REGEX_IP
+			regex: self.REGEX_IP,
+			required: true
 		},
 		{
 			type: 'number',
