@@ -9,11 +9,20 @@
 		"Protocol",
 		"Video Router",
 		"Software"
-  	],
+	],
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "Todd Murphy <todd@kingdomprod.com>",
-	"license": "MIT"
+	"license": "MIT",
+	"homepage": "https://github.com/bitfocus/companion-module-rossvideo-nkrouter#readme",
+	"bugs": {
+		"url": "https://github.com/bitfocus/companion-module-rossvideo-nkrouter/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bitfocus/companion-module-rossvideo-nkrouter.git"
+	},
+	"api_version": "1.0.0"
 }
