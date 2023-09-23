@@ -1,28 +1,21 @@
 {
 	"name": "rossvideo-nkrouter",
-	"version": "1.0.3",
-	"manufacturer": "Ross Video",
-	"product": "NK Router",
-	"shortname": "nk-router",
-	"description": "Companion Module for controlling Ross NK series video routers connected via NK-NET adapters",
-	"keywords": [
-		"Protocol",
-		"Video Router",
-		"Software"
-	],
-	"main": "index.js",
+	"version": "2.0.0",
+	"main": "./index.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"format": "prettier -w ."
 	},
-	"author": "Todd Murphy <todd@kingdomprod.com>",
+	"type": "module",
 	"license": "MIT",
-	"homepage": "https://github.com/bitfocus/companion-module-rossvideo-nkrouter#readme",
-	"bugs": {
-		"url": "https://github.com/bitfocus/companion-module-rossvideo-nkrouter/issues"
-	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/bitfocus/companion-module-rossvideo-nkrouter.git"
 	},
-	"api_version": "1.0.0"
+	"dependencies": {
+		"@companion-module/base": "~1.5.0"
+	},
+	"devDependencies": {
+		"@companion-module/tools": "^1.4.1"
+	},
+	"prettier": "@companion-module/tools/.prettierrc.json"
 }

@@ -2,4 +2,4 @@
 
 **Available commands for Ross NK Router**
 
-* Set Router Crosspoint
+- Set Router Crosspoint

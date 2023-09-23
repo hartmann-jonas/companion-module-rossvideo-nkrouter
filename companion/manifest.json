@@ -1,0 +1,30 @@
+{
+	"id": "rossvideo-nkrouter",
+	"name": "rossvideo-nkrouter",
+	"shortname": "nk-router",
+	"description": "Companion Module for controlling Ross NK series video routers connected via NK-NET adapters",
+	"version": "2.0.0",
+	"license": "MIT",
+	"repository": "git+https://github.com/bitfocus/companion-module-rossvideo-nkrouter.git",
+	"bugs": "https://github.com/bitfocus/companion-module-rossvideo-nkrouter/issues",
+	"maintainers": [
+		{
+			"name": "Todd Murphy",
+			"email": "todd@kingdomprod.com"
+		},
+		{
+			"name": "Jonas Hartmann",
+			"email": "git.jonashartmann@proton.me"
+		}
+	],
+	"legacyIds": [],
+	"runtime": {
+		"type": "node18",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../index.js"
+	},
+	"manufacturer": "Ross Video",
+	"products": ["NK Router"],
+	"keywords": ["Protocol", "Video Router", "Software"]
+}
