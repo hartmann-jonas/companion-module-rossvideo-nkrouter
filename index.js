@@ -5,32 +5,35 @@ import { getActions } from './actions.js'
 class NKRouterInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
+		this.options = {
+			inputs: [],
+			outputs: [],
+		}
 	}
 
 	async init(config) {
+		this.config = config
+
 		console.log('init')
 		this.startup(config)
 	}
 
 	async destroy() {
-		var self = this
-
 		if (this.keepAliveTimer != undefined) {
 			clearInterval(this.keepAliveTimer)
 			delete this.keepAliveTimer
 		}
 
-		if (self.socket !== undefined) {
-			self.socket.destroy()
+		if (this.socket !== undefined) {
+			this.socket.destroy()
 		}
 
-		this, this.updateStatus(InstanceStatus.Disconnected)
-		self.log('debug', 'destroy')
+		this.updateStatus(InstanceStatus.Disconnected)
+		this.log('debug', 'destroy')
 	}
 
 	startup(config) {
 		console.log('startup')
-		this.config = config
 		this.options = {
 			inputs: [],
 			outputs: [],
@@ -40,56 +43,63 @@ class NKRouterInstance extends InstanceBase {
 		this.initRouter()
 	}
 
+	async configUpdated(config) {
+		this.config = config
+
+		console.log('config changed')
+		startup(config);
+	}
+
 	async initRouter() {
 		console.log('init router')
-		const self = this
 		if (this.keepAliveTimer != undefined) {
 			clearInterval(this.keepAliveTimer)
 			delete this.keepAliveTimer
 		}
 
 		if (this.config.host) {
+			console.log('config recieved')
 			const config = this.config
 
 			// default to port 5000 if undefindes
 			if (config.port === undefined) {
 				config.port = 5000
 			}
-			self.socket = new TCPHelper(config.host, config.port)
+			this.socket = new TCPHelper(config.host, config.port)
 
-			self.socket.on('status_change', function (status, message) {
-				if (self.currentStatus == 0 && status == 2) {
+			this.socket.on('status_change', function (status, message) {
+				if (this.currentStatus == 0 && status == 2) {
 					// socket disconnected
-					self.stopKeepAliveTimer()
-					self.log('debug', 'Disconnected')
+					this.stopKeepAliveTimer()
+					this.log('debug', 'Disconnected')
 				}
-				self.updateStatus(status, message)
+				this.updateStatus(status, message)
 			})
 
-			self.socket.on('error', function (err) {
+			this.socket.on('error', function (err) {
 				//This gets spammy so it is removed currently
-				self.updateStatus(InstanceStatus.UnknownError, err)
-				self.log('error', 'Network error: ' + err.message)
+				this.updateStatus(InstanceStatus.UnknownError, err)
+				this.log('error', 'Network error: ' + err.message)
 			})
 
-			self.socket.on('connect', function () {
-				self.updateStatus(InstanceStatus.Ok)
-				self.log('debug', 'Connected')
-				self.socket.send('PHOENIX-DB N\n')
-				self.startKeepAliveTimer(10000) //Timer to send HI every 10 seconds to keep connection alive
+			this.socket.on('connect', function () {
+				this.updateStatus(InstanceStatus.Ok)
+				this.log('debug', 'Connected')
+				this.socket.send('PHOENIX-DB N\n')
+				this.startKeepAliveTimer(10000) //Timer to send HI every 10 seconds to keep connection alive
 			})
 
-			// update the input and output selections for the actions
+			// updatethis the input and output selections for the actions
 			// TODO: remove console.log
-			console.log('Inputs:' + self.config.inputs)
-			for (let i = 1; i <= self.config.inputs; i++) {
-				self.options.inputs.push({ id: String(i), label: i.toString() })
+			console.log('Inputs:' + this.config.inputs)
+			for (let i = 1; i <= this.config.inputs; i++) {
+				this.options.inputs.push({ id: String(i), label: i.toString() })
 			}
 
 			// TODO: remove console.log
-			console.log('Outputs:' + self.config.outputs)
-			for (let i = 1; i <= self.config.outputs; i++) {
-				self.options.outputs.push({ id: String(i), label: i.toString() })
+			console.log('Outputs:' + this.config.outputs)
+			for (let i = 1; i <= this.config.outputs; i++) {
+				this.options.outputs.push({ id: String(i), label: i.toString() })
 			}
 
 			this.log('debug', 'Action options updated')
