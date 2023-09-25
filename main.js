@@ -1,20 +1,14 @@
-import { InstanceBase, InstanceStatus, runEntrypoint, TCPHelper } from '@companion-module/base'
+import { InstanceBase, runEntrypoint, InstanceStatus, TCPHelper } from '@companion-module/base'
 import { ConfigFields } from './config.js'
 import { getActions } from './actions.js'
+import { UpgradeScripts } from './upgrades.js'
 
 class NKRouterInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
-		this.options = {
-			inputs: [],
-			outputs: [],
-		}
 	}
 
 	async init(config) {
-		this.config = config
-
-		console.log('init')
 		this.startup(config)
 	}
 
@@ -28,26 +22,20 @@ class NKRouterInstance extends InstanceBase {
 			this.socket.destroy()
 		}
 
-		this.updateStatus(InstanceStatus.Disconnected)
+		this, this.updateStatus(InstanceStatus.Disconnected)
 		this.log('debug', 'destroy')
 	}
 
 	startup(config) {
 		console.log('startup')
+		this.config = config
 		this.options = {
 			inputs: [],
 			outputs: [],
 		}
-
+		this.connected = false
 		this.updateActions()
 		this.initRouter()
-	}
-
-	async configUpdated(config) {
-		this.config = config
-
-		console.log('config changed')
-		startup(config);
 	}
 
 	async initRouter() {
@@ -59,13 +47,12 @@ class NKRouterInstance extends InstanceBase {
 
 		if (this.config.host) {
 			console.log('config recieved')
-			const config = this.config
 
 			// default to port 5000 if undefindes
-			if (config.port === undefined) {
-				config.port = 5000
+			if (this.config.port === undefined) {
+				this.config.port = 5000
 			}
-			this.socket = new TCPHelper(config.host, config.port)
+			this.socket = new TCPHelper(this.config.host, this.config.port)
 
 			this.socket.on('status_change', function (status, message) {
 				if (this.currentStatus == 0 && status == 2) {
@@ -107,6 +94,12 @@ class NKRouterInstance extends InstanceBase {
 		}
 	}
 
+	async configUpdated(config) {
+		console.log('config changed')
+		this.config = config
+		this.init(config);
+	}
+
 	getConfigFields() {
 		return ConfigFields
 	}
@@ -116,7 +109,7 @@ class NKRouterInstance extends InstanceBase {
 	}
 
 	changeXPT(address, output, input, level) {
-		var self = this
+		const self = this
 
 		if (output < self.config.outputs) {
 			if (input < self.config.inputs) {
@@ -178,7 +171,7 @@ class NKRouterInstance extends InstanceBase {
 	}
 
 	startKeepAliveTimer(timeout) {
-		var self = this
+		const self = this
 
 		if (this.keepAliveTimer != undefined) {
 			clearInterval(this.keepAliveTimer)
@@ -194,7 +187,7 @@ class NKRouterInstance extends InstanceBase {
 	}
 
 	transmitCommand(command) {
-		var self = this
+		const self = this
 
 		if (self.socket !== undefined && self.socket.connected) {
 			self.socket.send(command)
@@ -204,4 +197,4 @@ class NKRouterInstance extends InstanceBase {
 	}
 }
 
-runEntrypoint(NKRouterInstance, [])
+runEntrypoint(NKRouterInstance, UpgradeScripts)
