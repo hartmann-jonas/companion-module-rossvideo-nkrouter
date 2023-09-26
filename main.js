@@ -8,72 +8,96 @@ class NKRouterInstance extends InstanceBase {
 		super(internal)
 	}
 
-	async init(config) {
-		this.startup(config)
-	}
-
-	async destroy() {
-		if (this.keepAliveTimer != undefined) {
-			clearInterval(this.keepAliveTimer)
-			delete this.keepAliveTimer
-		}
-
-		if (this.socket !== undefined) {
-			this.socket.destroy()
-		}
-
-		this, this.updateStatus(InstanceStatus.Disconnected)
-		this.log('debug', 'destroy')
-	}
-
-	startup(config) {
-		console.log('startup')
-		this.config = config
-		this.options = {
+	async init() {
+		const self = this
+		self.config = {}
+		self.options = {
 			inputs: [],
 			outputs: [],
 		}
-		this.connected = false
-		this.updateActions()
-		this.initRouter()
+		self.connected = false
+		self.keepAliveTimer
+
+		self.updateStatus(InstanceStatus.Connecting)
+
+		self.init_tcp()
+
+		self.updateOptions()
+
+		self.updateActions()
 	}
 
-	async initRouter() {
-		console.log('init router')
-		if (this.keepAliveTimer != undefined) {
-			clearInterval(this.keepAliveTimer)
-			delete this.keepAliveTimer
+	async configUpdated(config) {
+		console.log('config changed')
+		const self = this
+
+		let reinit = false
+
+		if (config.host != self.config.host) {
+			reinit = true
 		}
 
-		if (this.config.host) {
+		self.config = config
+
+		self.updateOptions()
+
+		self.updateActions()
+		
+		if (reinit) {
+			self.init_tcp()
+		}
+	}
+
+	async destroy() {
+		const self = this
+
+		self.stopKeepAliveTimer()
+
+		if (self.socket !== undefined) {
+			self.socket.destroy()
+		}
+
+		self, self.updateStatus(InstanceStatus.Disconnected)
+		self.log('debug', 'destroy')
+	}
+
+	async init_tcp() {
+		const self = this
+		console.log('init router')
+		if (self.socket !== undefined) {
+			self.socket.destroy()
+			self.stopKeepAliveTimer()
+			delete self.socket
+		}
+
+		if (self.config.host !== undefined) {
+			console.log(self.config.host)
 			console.log('config recieved')
-
-			// default to port 5000 if undefindes
-			if (this.config.port === undefined) {
-				this.config.port = 5000
+			if (self.config.port === undefined) {
+				self.config.port = 5000
 			}
-			this.socket = new TCPHelper(this.config.host, this.config.port)
+			self.socket = new TCPHelper(self.config.host, self.config.port)
 
-			this.socket.on('status_change', function (status, message) {
-				if (this.currentStatus == 0 && status == 2) {
-					// socket disconnected
-					this.stopKeepAliveTimer()
-					this.log('debug', 'Disconnected')
+			self.socket.on('status_change', function (status, message) {
+				if ((self.currentStatus) == 0 && (status == 2)) {
+					// disconnected from a connected state
+					self.stopKeepAliveTimer()
+					self.log('debug', 'Disconnected')
 				}
-				this.updateStatus(status, message)
+				self.updateStatus(status, message)
 			})
 
-			this.socket.on('error', function (err) {
-				//This gets spammy so it is removed currently
-				this.updateStatus(InstanceStatus.UnknownError, err)
-				this.log('error', 'Network error: ' + err.message)
+			self.socket.on('error', function (err) {
+				// This gets spammy so it is removed currently
+				// self.updateStatus(InstanceStatus.UnknownError, err)
+				// self.log('error', 'Network error: ' + err.message)
 			})
 
-			this.socket.on('connect', function () {
-				this.updateStatus(InstanceStatus.Ok)
-				this.log('debug', 'Connected')
-				this.socket.send('PHOENIX-DB N\n')
-				this.startKeepAliveTimer(10000) //Timer to send HI every 10 seconds to keep connection alive
+			self.socket.on('connect', function () {
+				self.updateStatus(InstanceStatus.Ok)
+				self.log('debug', 'Connected')
+				self.socket.send('PHOENIX-DB N\n')
+				self.startKeepAliveTimer(10000) //Timer to send HI every 10 seconds to keep connection alive
 			})
 
 			// updatethis the input and output selections for the actions
@@ -94,11 +118,7 @@ class NKRouterInstance extends InstanceBase {
 		}
 	}
 
-	async configUpdated(config) {
-		console.log('config changed')
-		this.config = config
-		this.init(config);
-	}
+
 
 	getConfigFields() {
 		return ConfigFields
@@ -106,6 +126,18 @@ class NKRouterInstance extends InstanceBase {
 
 	updateActions() {
 		this.setActionDefinitions(getActions(this))
+	}
+
+	updateOptions() {
+		const self = this
+
+		for (let i =1; i <= self.config.inputs; i++) {
+			self.CHOICES_INPUTS.push({ id: String(i), label: i.toString() })
+		}
+	
+		for (let i =1; i <= self.config.outputs; i++) {
+			self.CHOICES_OUTPUTS.push({ id: String(i), label: i.toString() })
+		}
 	}
 
 	changeXPT(address, output, input, level) {
@@ -173,17 +205,22 @@ class NKRouterInstance extends InstanceBase {
 	startKeepAliveTimer(timeout) {
 		const self = this
 
-		if (this.keepAliveTimer != undefined) {
-			clearInterval(this.keepAliveTimer)
-			delete this.keepAliveTimer
-		}
+		self.stopKeepAliveTimer();
 
-		this.log('debug', 'say hi!')
 		// Create a reconnect timer to watch the socket. If disconnected try to connect.
 		self.keepAliveTimer = setInterval(function () {
+			self.log('debug', 'handshake')
 			self.transmitCommand('HI\r')
-			console.log('HI')
 		}, timeout)
+	}
+
+	stopKeepAliveTimer() {
+		const self = this
+		
+		if (self.keepAliveTimer !== undefined) {
+			clearInterval(self.keepAliveTimer)
+			delete self.keepAliveTimer
+		}
 	}
 
 	transmitCommand(command) {
